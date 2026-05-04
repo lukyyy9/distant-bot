@@ -31,7 +31,7 @@ jobs:
         uses: tailscale/github-action@v2
         with:
           authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
-          version: latest
+          version: 1.64.0 # Utilisation d'une version fixe plutôt que 'latest' pour éviter les bugs de shasum
           
       - name: Deploy to VPS
         run: |
