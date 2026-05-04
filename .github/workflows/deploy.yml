@@ -45,5 +45,5 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "mkdir -p /home/${{ secrets.SERVER_USER }}/distant-bot"
           scp -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/distant-bot/docker-compose.yml
           
-          # Re-déploiement sur le VPS
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/${{ secrets.SERVER_USER }}/distant-bot && docker compose down && docker compose pull && docker compose up -d"
+          # Re-déploiement sur le VPS en injectant la variable d'environnement
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/${{ secrets.SERVER_USER }}/distant-bot && export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} && docker compose down && docker compose pull && docker compose up -d"
