@@ -35,16 +35,17 @@ jobs:
           
       - name: Deploy to VPS
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-          
-          # Création du dossier au cas où
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "mkdir -p /home/${{ secrets.SERVER_USER }}/distant-bot"
-          
-          # Copie du docker-compose.yml
-          scp docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/distant-bot/docker-compose.yml
+          # Démarrage de Tailscale en mode userspace comme sur GitLab
+          sudo tailscaled --tun=userspace-networking --socks5-server=localhost:1055 &
+          sleep 10
+          sudo tailscale up --authkey=${{ secrets.TAILSCALE_AUTHKEY }} --hostname=github-runner
+
+          # Utilisation de netcat via le proxy SOCKS5 local fourni par Tailscale
+          sudo apt-get update && sudo apt-get install -y netcat-openbsd
+
+          # Création du dossier et copie du docker-compose.yml
+          ssh -o StrictHostKeyChecking=no -o ProxyCommand="nc -X 5 -x localhost:1055 %h %p" ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "mkdir -p /home/${{ secrets.SERVER_USER }}/distant-bot"
+          scp -o StrictHostKeyChecking=no -o ProxyCommand="nc -X 5 -x localhost:1055 %h %p" docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/distant-bot/docker-compose.yml
           
           # Re-déploiement sur le VPS
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/${{ secrets.SERVER_USER }}/distant-bot && docker compose down && docker compose pull && docker compose up -d"
+          ssh -o StrictHostKeyChecking=no -o ProxyCommand="nc -X 5 -x localhost:1055 %h %p" ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/${{ secrets.SERVER_USER }}/distant-bot && docker compose down && docker compose pull && docker compose up -d"
