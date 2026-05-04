@@ -35,17 +35,15 @@ jobs:
           
       - name: Deploy to VPS
         run: |
-          # Démarrage de Tailscale en mode userspace comme sur GitLab
-          sudo tailscaled --tun=userspace-networking --socks5-server=localhost:1055 &
-          sleep 10
-          sudo tailscale up --authkey=${{ secrets.TAILSCALE_AUTHKEY }} --hostname=github-runner
+          # Utilisation de l'outil CLI natif vu que l'action github l'a déjà installé et lancé un daemon
+          sudo tailscale up --authkey=${{ secrets.TAILSCALE_AUTHKEY }} --hostname=github-runner --accept-routes --reset
 
-          # Utilisation de netcat via le proxy SOCKS5 local fourni par Tailscale
+          # Utilisation de netcat pour forcer le traçage si besoin (souvent facultatif avec le daemon system global)
           sudo apt-get update && sudo apt-get install -y netcat-openbsd
 
-          # Création du dossier et copie du docker-compose.yml
-          ssh -o StrictHostKeyChecking=no -o ProxyCommand="nc -X 5 -x localhost:1055 %h %p" ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "mkdir -p /home/${{ secrets.SERVER_USER }}/distant-bot"
-          scp -o StrictHostKeyChecking=no -o ProxyCommand="nc -X 5 -x localhost:1055 %h %p" docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/distant-bot/docker-compose.yml
+          # Création du dossier et copie du docker-compose.yml via l'IP Tailscale du VPS
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "mkdir -p /home/${{ secrets.SERVER_USER }}/distant-bot"
+          scp -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/distant-bot/docker-compose.yml
           
           # Re-déploiement sur le VPS
-          ssh -o StrictHostKeyChecking=no -o ProxyCommand="nc -X 5 -x localhost:1055 %h %p" ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/${{ secrets.SERVER_USER }}/distant-bot && docker compose down && docker compose pull && docker compose up -d"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/${{ secrets.SERVER_USER }}/distant-bot && docker compose down && docker compose pull && docker compose up -d"
