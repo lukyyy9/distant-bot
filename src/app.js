@@ -2,7 +2,9 @@ require('dotenv').config();
 const { Client, GatewayIntentBits, REST, Routes, Events } = require('discord.js');
 const commands = require('./commands');
 const { spotifyTokenInit } = require('./services/spotify.service');
-const { initDB, upvoteHandler } = require('./db/upvotes');
+const { initDB, upvoteHandler } = require('./services/db.service');
+const cron = require('node-cron');
+const { getWeeklyTopPosts } = require('./services/db.service');
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
@@ -51,7 +53,7 @@ client.on(Events.InteractionCreate, async interaction => {
         const userId = String(interaction.user.id);
 
         if (action === 'upvote') {
-            await upvoteHandler(postId, userId);
+            await upvoteHandler(postId, userId, interaction.guildId);
             await interaction.reply({
                 content: `Post upvoted by <@${userId}>`,
                 ephemeral: true // Invisible pour les autres, remplace flag: 64
@@ -63,6 +65,26 @@ client.on(Events.InteractionCreate, async interaction => {
 async function start() {
     try {
         await initDB();
+
+        // Schedule weekly top posts (Sunday at 20:00)
+        cron.schedule('0 20 * * 0', async () => {
+            console.log("Envoi du podium hebdomadaire...");
+            const topByGuild = await getWeeklyTopPosts();
+            for (const [guildId, posts] of Object.entries(topByGuild)) {
+                if (posts.length === 0) continue;
+                
+                const guild = client.guilds.cache.get(guildId);
+                if (!guild) continue;
+                
+                // Trouve un salon par défaut où écrire (systemChannel ou le premier salon texte)
+                const channel = guild.systemChannel || guild.channels.cache.find(c => c.type === 0); // 0 = GuildText
+                if (channel) {
+                    const { buildPodiumMessage } = require('./services/db.service');
+                    const msg = buildPodiumMessage(posts);
+                    await channel.send(msg).catch(console.error);
+                }
+            }
+        });
         await spotifyTokenInit();
         await client.login(process.env.TOKEN);
     } catch (error) {

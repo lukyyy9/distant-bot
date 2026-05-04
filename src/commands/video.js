@@ -1,5 +1,7 @@
 const { getService, getRidOfVmTiktok } = require('../utils/url');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { createPost } = require('../services/db.service');
+const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
     data: {
@@ -44,8 +46,11 @@ module.exports = {
                 break;
         }
 
+        const postId = uuidv4();
+        await createPost(postId, interaction.guildId, interaction.user.id, url);
+
         const upvoteBtn = new ButtonBuilder()
-            .setCustomId(`upvote_${interaction.options.getString('url')}`)
+            .setCustomId(`upvote_${postId}`)
             .setLabel('❤')
             .setStyle(ButtonStyle.Primary);
         

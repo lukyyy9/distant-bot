@@ -21,9 +21,11 @@
 		"axios": "^0.27.2",
 		"discord.js": "^14.26.4",
 		"dotenv": "^16.4.5",
+		"node-cron": "^4.2.1",
 		"pg": "^8.20.0",
 		"pg-hstore": "^2.3.4",
-		"sequelize": "^6.37.8"
+		"sequelize": "^6.37.8",
+		"uuid": "^14.0.0"
 	},
 	"devDependencies": {
 		"nodemon": "^2.0.19"
