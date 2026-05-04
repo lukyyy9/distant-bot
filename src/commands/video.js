@@ -21,7 +21,7 @@ module.exports = {
         
         switch (getService(url) + '.') {
             case 'instagram.': 
-                url = url.replace('instagram.', 'ddinstagram.'); 
+                url = url.replace('instagram.', 'kkinstagram.'); 
                 videoType = 'Reel'; 
                 break;
             case 'tiktok.':
