@@ -4,5 +4,6 @@ module.exports = {
     esiahc: require('./fun').esiahc,
     music: require('./music'),
     video: require('./video'),
-    topuser: require('./topuser')
+    topuser: require('./topuser'),
+    topvideo: require('./topvideo')
 };
