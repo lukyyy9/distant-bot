@@ -41,4 +41,4 @@ Distant is an open source project, inviting the community to contribute towards 
 
 ## Setup
 
-**[Click here](https://erin-awful-duckling.cyclic.app/)** to add Distant to your Discord server.
+**[Click here](https://discord.com/oauth2/authorize?client_id=1212077510431608973&permissions=83968&scope=bot+applications.commands)** to add Distant to your Discord server.
