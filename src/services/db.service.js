@@ -1,9 +1,9 @@
-const { sequelize, User, Post, UserVote } = require('../models');
+const { sequelize, User, GuildMember, Post, UserVote } = require('../models');
 
 async function initDB() {
     try {
         await sequelize.authenticate();
-        await sequelize.sync({ alter: true }); // Crée/Modifie les tables
+        await sequelize.sync({ force: true }); // Attention: force vide les données. Idéal pour reconstruire l'association et purger les schémas erronés.
         console.log("PostgreSQL Database tables verified/initialized with Sequelize.");
     } catch (error) {
         console.error("Error initializing PostgreSQL DB:", error);
@@ -12,6 +12,7 @@ async function initDB() {
 
 async function createPost(id, guildId, authorId, url) {
     try {
+        await User.findOrCreate({ where: { id: authorId } });
         await Post.findOrCreate({
             where: { id },
             defaults: { guildId, authorId, url, votes: 0 }
@@ -36,16 +37,18 @@ async function upvoteHandler(postId, userId, guildId) {
         });
 
         if (!existingVote) {
+            await User.findOrCreate({ where: { id: userId }, transaction });
             await UserVote.create({ user_id: userId, post_id: postId }, { transaction });
             await post.increment('votes', { by: 1, transaction });
 
-            // On récompense l'auteur du post, pas celui qui clique (userId)
-            await User.findOrCreate({
-                where: { id: post.authorId, guildId: post.guildId },
+            // On récompense l'auteur du post dans le contexte de la guilde
+            await User.findOrCreate({ where: { id: post.authorId }, transaction });
+            await GuildMember.findOrCreate({
+                where: { discordId: post.authorId, guildId: post.guildId },
                 defaults: { votes: 0 },
                 transaction
             });
-            await User.increment('votes', { by: 1, where: { id: post.authorId, guildId: post.guildId }, transaction });
+            await GuildMember.increment('votes', { by: 1, where: { discordId: post.authorId, guildId: post.guildId }, transaction });
         }
         await transaction.commit();
     } catch (error) {
@@ -56,19 +59,19 @@ async function upvoteHandler(postId, userId, guildId) {
 
 async function getTopUsers(guildId) {
     try {
-        const users = await User.findAll({
+        const members = await GuildMember.findAll({
             where: { guildId },
             order: [['votes', 'DESC']],
             limit: 5
         });
         
-        if (users.length === 0) return 'Aucun utilisateur trouvé.';
+        if (members.length === 0) return 'Aucun utilisateur trouvé.';
         
-        return users.map((user, index) => {
-            return `${index + 1}. <@${user.id}>: ${user.votes} j'aimes reçus`;
+        return members.map((member, index) => {
+            return `${index + 1}. <@${member.discordId}>: ${member.votes} j'aimes reçus`;
         }).join('\n');
     } catch (error) {
-        console.error('Erreur lors de la récupération des meilleurs utilisateurs:', error);
+        console.error('Erreur:', error);
         return 'Erreur lors de la récupération des meilleurs utilisateurs.';
     }
 }
