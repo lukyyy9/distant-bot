@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  bot:
+    image: ${DOCKER_USERNAME}/distant-bot:latest
+    container_name: distant-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    # Pas besoin d'exposer les ports si Discord intègre le bot via le websocket Discord.
+    # Sauf si tu utilises des interactions HTTP sortantes.
