@@ -2,7 +2,7 @@ const { getWeeklyTopPosts, buildPodiumMessage } = require('../services/db.servic
 
 module.exports = {
     data: {
-        name: "topvideo",
+        name: "top",
         description: "Affiche le podium des vidéos les plus aimées de la semaine sur le serveur",
     },
     execute: async (interaction) => {

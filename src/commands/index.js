@@ -1,9 +1,6 @@
 module.exports = {
     ping: require('./ping'),
-    chaise: require('./fun').chaise,
-    esiahc: require('./fun').esiahc,
-    music: require('./music'),
+    //music: require('./music'),
     video: require('./video'),
-    topuser: require('./topuser'),
-    topvideo: require('./topvideo')
+    top: require('./top')
 };
