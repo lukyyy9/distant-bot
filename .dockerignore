@@ -1,0 +1,5 @@
+node_modules
+.env
+.git
+*.log
+Distant Bot Firebase Admin SDK.json
