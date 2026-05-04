@@ -7,5 +7,21 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    # Pas besoin d'exposer les ports si Discord intègre le bot via le websocket Discord.
-    # Sauf si tu utilises des interactions HTTP sortantes.
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    container_name: distant-bot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PG_USER:-botuser}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-botpassword}
+      POSTGRES_DB: ${PG_DB:-distantbot}
+    ports:
+      - "5433:5432" # <-- Exposé sur le port 5433 de ton VPS
+    volumes:
+      - distant-bot-db-data:/var/lib/postgresql/data
+
+volumes:
+  distant-bot-db-data:
