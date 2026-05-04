@@ -28,7 +28,7 @@ module.exports = {
                 if(url.includes('vm.tiktok')){
                     url = await getRidOfVmTiktok(url);
                 }
-                url = url.replace('tiktok.', 'vxtiktok.');
+                url = url.replace('tiktok.', 'kktiktok.');
                 videoType = 'TikTok';
                 break;
             case 'twitter.': 
