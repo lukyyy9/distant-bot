@@ -2,11 +2,12 @@ const axios = require('axios');
 
 async function getTrackDetailsFromDeezer(url) {
   let trackId = '';
-  if (url.includes('deezer.page.link') || url.includes('deezer.com/fr/track') || url.includes('deezer.com/track')) {
-      if (url.includes('deezer.page.link')) {
+  if (url.includes('deezer.page.link') || url.includes('link.deezer.com') || url.includes('deezer.com/fr/track') || url.includes('deezer.com/track') || url.includes('deezer.com/')) {
+      if (url.includes('deezer.page.link') || url.includes('link.deezer.com')) {
           const fullPage = await axios.get(url);
-          const urlExtractRegex = /https:\/\/www\.deezer\.com\/\w+\/track\/(\d+)/;
-          const match = fullPage.data.match(urlExtractRegex);
+          const urlExtractRegex = /https:\/\/www\.deezer\.com(?:\/\w+)?\/track\/(\d+)/;
+          const finalUrl = (fullPage.request && fullPage.request.res && fullPage.request.res.responseUrl) || '';
+          const match = finalUrl.match(urlExtractRegex) || (typeof fullPage.data === 'string' ? fullPage.data.match(urlExtractRegex) : null);
           if(match) trackId = match[1];
       } else {
           trackId = url.split('track/')[1].split('?')[0];

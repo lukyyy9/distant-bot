@@ -4,6 +4,7 @@ function getService(url) {
   try {
     const hostname = new URL(url).hostname.replace('www.', '').split('.')[0].toLowerCase();
     if (url.includes('spotify') && hostname === "open") return 'spotify';
+    if (url.includes('deezer') && hostname === "link") return 'deezer';
     if (url.includes('tiktok') && hostname === "vm") return 'tiktok';
     if (url.includes('youtu.be') && hostname === 'youtu') return 'youtube';
     return hostname;
